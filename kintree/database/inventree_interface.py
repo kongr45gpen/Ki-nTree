@@ -422,12 +422,17 @@ def inventree_create(part_info: dict, categories: list, kicad=False, symbol=None
 
             # Generate Internal Part Number
             cprint('\n[MAIN]\tGenerating Internal Part Number', silent=settings.SILENT)
-            ipn = part_tools.generate_part_number(category_name, part_pk)
+            ipn = list(inventree_part['manufacturer'].values())[0][0]
+            if ipn is None:
+                ipn = part_tools.generate_part_number(category_name, part_pk)
             cprint(f'[INFO]\tInternal Part Number = {ipn}', silent=settings.SILENT)
             # Update InvenTree part number
-            ipn_update = inventree_api.set_part_number(part_pk, ipn)
-            if not ipn_update:
-                cprint('\n[INFO]\tError updating IPN', silent=settings.SILENT)
+            try:
+                ipn_update = inventree_api.set_part_number(part_pk, ipn)
+                if not ipn_update:
+                    cprint('\n[INFO]\tError updating IPN', silent=settings.SILENT)
+            except Exception as e:
+                cprint(f'\n[INFO]\tError updating IPN: {ipn}', silent=settings.SILENT)
             inventree_part['IPN'] = ipn
             # Update InvenTree URL
             inventree_part['inventree_url'] = f'{settings.PART_URL_ROOT}{inventree_part["IPN"]}/'
